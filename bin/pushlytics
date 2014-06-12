@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+
+var pushlytics = require('../')
+  , http = require('http')
+
+var prefix = null;
+var path = null;
+var route = null;
+var port = 8775;
+var pe = console.error.bind(console);
+var exit = process.exit;
+
+/**
+ * Output usage
+ */
+
+function usage () {
+  pe("usage: pushlytics [-hV] [-p port] [-r route] [-d dbpath] [-n dbprefix]");
+}
+
+/**
+ * Parse opts
+ */
+
+void function (argv, argc) {
+  var opt = null;
+  var i = 0;
+  for (; i < argc; ++i) {
+    switch (argv[i]) {
+      case '-h':
+        usage();
+        exit();
+        break;
+
+      case '-V':
+        console.log(require('../package').version);
+        exit();
+        break;
+
+      case '-p':
+        port = argv[i+1];
+        if ('-' == port[0]) {
+          pe("error: Invalid port `%s'", port);
+          usage();
+          exit(1);
+        }
+        break;
+
+      case '-d':
+        path = argv[i+1];
+        if ('-' == path[0]) {
+          pe("error: Invalid database path `%s'", path);
+          usage();
+          exit(1);
+        }
+        break;
+
+      case '-n':
+        prefix = argv[i+1];
+        if ('-' == prefix[0]) {
+          pe("error: Invalid database prefix name `%s'", prefix);
+          usage();
+          exit(1);
+        }
+        break;
+
+      case '-r':
+        route = argv[i+1];
+        if ('-' == port[0]) {
+          pe("error: Invalid route `%s'", route);
+          usage();
+          exit(1);
+        }
+        break;
+
+      default:
+        if ('-' == argv[i][0]) {
+          pe("error: Unknown option `%s'", argv[i]);
+          usage();
+          exit(1);
+        }
+    }
+  }
+}(process.argv, process.argv.length);
+
+var lytics = pushlytics(route, {
+  store: {
+    prefix: prefix,
+    path: path
+  }
+});
+var server = http.createServer(lytics);
+
+server.listen(port, function () {
+});
